@@ -66,13 +66,12 @@ def generate_background_color(background_image):
 
 class UserBackgroundAdd(generics.CreateAPIView):
     queryset = UserBackground.objects.order_by('-id').all()
-    serializer_class = UserBackgroundSerializer
 
     def post(self, request, *args, **kwargs):
 
         # Validate data
-        # serializer = self.get_serializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
+        serializer = UserBackgroundSerializer()
+        serializer.validate(request.data)
 
         # Get Image Background
         background = BackgroundImage.objects.get(id=request.data['background_id'])
@@ -85,13 +84,13 @@ class UserBackgroundAdd(generics.CreateAPIView):
 
         # Save and get open url
         fss = FileSystemStorage()
-        file = fss.save(company_logo.name, company_logo)
+        logo_filename = fss.save(company_logo.name, company_logo)
 
         # Replace first '/' because open function doesn't support /uploads/images
-        file_url = fss.url(file).replace('/', '', 1) 
+        logo_file = fss.url(logo_filename).replace('/', '', 1) 
 
         # Open image logo
-        logo = Image.open(file_url).convert('RGBA')
+        logo = Image.open(logo_file).convert('RGBA')
 
         # Open Image Background
         generated_background_image = Image.open(MEDIA_URL+str(background.image))
@@ -123,16 +122,10 @@ class UserBackgroundAdd(generics.CreateAPIView):
             username=request.data['username'],
             company_name=request.data['company_name'],
             role=request.data['role'],
-            company_logo=request.data['company_logo'],
+            company_logo=logo_filename,
             background_id=background,
             generated_background=filename,
         )
-
-        # request.data._mutable = True
-        # request.data['background_id'] = background.id
-        # request.data['generated_background'] = filename
-
-        # new_user_background = self.create(request, *args, **kwargs)
 
         # Save Image
         generated_background_image.save(MEDIA_URL+filename, quality=100)
