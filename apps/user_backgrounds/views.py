@@ -66,6 +66,7 @@ def generate_background_color(background_image):
 
 class UserBackgroundAdd(generics.CreateAPIView):
     queryset = UserBackground.objects.order_by('-id').all()
+    serializer_class = UserBackgroundSerializer
 
     def post(self, request, *args, **kwargs):
 
